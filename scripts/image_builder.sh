@@ -89,7 +89,7 @@ function verify_images() {
     for distro in "${ros_distros[@]}"; do
         echo "----- $distro image verifying"
         docker run -it --rm $DOCKERHUB_USERNAME/ros2dev:$distro \
-            bash -c "source /root/.bashrc && mkdir -p /root/colcon_ws/src && cd /root/colcon_ws && vcs import --input https://raw.githubusercontent.com/ros2/ros2/$ROS_DISTRO/ros2.repos src && colcon build --symlink-install && cd /root && rm -rf /root/colcon_ws"
+            bash -c "source /root/.bashrc && mkdir -p /root/colcon_ws/src && cd /root/colcon_ws && vcs import --input https://raw.githubusercontent.com/ros2/ros2/$distro/ros2.repos src && colcon build --symlink-install && cd /root && rm -rf /root/colcon_ws"
     done
     echo "----- all images successfully verified!!! -----"
 }
