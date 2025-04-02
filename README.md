@@ -10,6 +10,11 @@ Or if you are developing ROS 2 core implementation such as `rmw` implementation 
 
 The container images created by [ros2_devenv_builder](https://github.com/fujitatomoya/ros2_devenv_builder) installed all development dependencies and packages in the roof file system, that means we can just bind the development source code to the container and start building with it.
 
+## When to re-create images
+
+These development images are expected to have all dependent packages using `rosdep`.
+That means once [ros2 repo](https://github.com/ros2/ros2) is updated or added with new packages, `rosdep` is required to rebuild to install all the dependent packages, and then release the images.
+
 ## How to use
 
 The following options can be executed at the same time.
@@ -35,7 +40,7 @@ The following options can be executed at the same time.
   This releases created container to [DockerHub](https://hub.docker.com/).
 
 ```bash
-./scripts/image_builder.sh -v
+./scripts/image_builder.sh -u
 ```
 
 ## Reference
