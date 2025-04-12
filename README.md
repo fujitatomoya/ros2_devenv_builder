@@ -43,6 +43,14 @@ The following options can be executed at the same time.
 ./scripts/image_builder.sh -u
 ```
 
+- Target distribution
+
+  This option allows you to build/release the specified ROS distribution only.
+
+```bash
+./scripts/image_builder.sh -t jazzy
+```
+
 ## Reference
 
 - https://docs.ros.org/en/rolling/Installation/Alternatives/Ubuntu-Development-Setup.html

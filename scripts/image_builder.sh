@@ -30,11 +30,12 @@ upload_image=false
 ########################
 
 function print_usage() {
-    echo "Usage: $0 [-b] [-v] [-u]"
+    echo "Usage: $0 [-b] [-v] [-u] [-t <target_distro>]"
     echo "Options(default):"
     echo "  -b : build ros2dev docker container images (default: false)"
     echo "  -v : verify images with full source build (default: false)"
     echo "  -u : upload images to DockerHub (default: false)"
+    echo "  -t : target distribution (default: all)"
     exit 1
 }
 
@@ -113,7 +114,7 @@ function upload_images() {
 trap exit_trap ERR
 
 # parse command line options
-while getopts ":bvu" opt; do
+while getopts ":bvut:" opt; do
     case $opt in
         b)
             build_image=true
@@ -123,6 +124,23 @@ while getopts ":bvu" opt; do
             ;;
         u)
             upload_image=true
+            ;;
+        t)
+            target_distro="$OPTARG"
+            # Check if the target distribution is valid
+            valid_distro=false
+            for distro in "${ros_distros[@]}"; do
+                if [[ "$distro" == "$target_distro" ]]; then
+                    valid_distro=true
+                    break
+                fi
+            done
+            if [[ "$valid_distro" == false ]]; then
+                echo "Error: Invalid target distribution option. Must be one of: ${ros_distros[*]}"
+                print_usage
+                exit 1
+            fi
+            ros_distros=("$target_distro")
             ;;
         \?)
             echo "Invalid option: -$OPTARG"
