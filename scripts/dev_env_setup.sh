@@ -114,7 +114,8 @@ function rosdep_setup() {
     apt upgrade -y
     rosdep init
     rosdep update
-    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers"
+    # ignore RTI Connext dependencies in default
+    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 urdfdom_headers"
     cd -
     rm -rf ${temp_dir}
 }
