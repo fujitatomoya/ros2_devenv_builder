@@ -13,10 +13,11 @@
 ros_distros=(
     "humble"
     "jazzy"
+    "kilted"
     "rolling"
 )
 
-# for Jazzy and Rolling
+# for Jazzy, Kilted and Rolling
 noble_development_packages=(
     "python3-flake8-blind-except"
     "python3-flake8-class-newline"
@@ -91,8 +92,13 @@ function enable_repository() {
     # add repositories
     add-apt-repository -y universe
     apt update && apt install curl -y
-    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+    if [ "$target_distro" = "humble" || "$target_distro" = "jazzy" || "$target_distro" = "rolling" ]; then
+        curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+    else # kilted only
+        curl -o /tmp/ros2-apt-source.deb "https://ftp.osuosl.org/pub/ros/packages.ros.org/ros2/ubuntu/pool/main/r/ros-apt-source/ros2-apt-source_1.0.0~$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"
+        apt install /tmp/ros2-apt-source.deb
+    fi
     # install development packages
     if [ "$target_distro" = "humble" ]; then
         echo "/// ---------- [${FUNCNAME[0]}]: install Ubuntu Jammy packages."
@@ -156,7 +162,7 @@ get_ubuntu_version
 if [ "$target_distro" = "humble" ] && [ "$UBUNTU_VERSION" != "22.04" ]; then
     echo "Error: ROS 2 Humble requires Ubuntu 22.04."
     exit 1
-elif [[ "$target_distro" = "jazzy" || "$target_distro" = "rolling" ]] && [ "$UBUNTU_VERSION" != "24.04" ]; then
+elif [[ "$target_distro" = "jazzy" || "$target_distro" = "kilted" || "$target_distro" = "rolling" ]] && [ "$UBUNTU_VERSION" != "24.04" ]; then
     echo "Error: ROS 2 Jazzy and Rolling require Ubuntu 24.04."
     exit 1
 fi

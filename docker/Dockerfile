@@ -21,7 +21,7 @@ ARG UBUNTU
 ARG SETUP_WS
 
 LABEL maintainer="Tomoya Fujita <tomoya.fujita825@gmail.com>"
-LABEL version="1.0"
+LABEL version="1.1"
 LABEL description="ros2 source builder docker image for ${ROS_DISTRO}"
 
 SHELL ["/bin/bash","-c"]
