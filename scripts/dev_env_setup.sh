@@ -92,13 +92,9 @@ function enable_repository() {
     # add repositories
     add-apt-repository -y universe
     apt update && apt install curl -y
-    if [ "$target_distro" = "humble" || "$target_distro" = "jazzy" || "$target_distro" = "rolling" ]; then
-        curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
-    else # kilted only
-        curl -o /tmp/ros2-apt-source.deb "https://ftp.osuosl.org/pub/ros/packages.ros.org/ros2/ubuntu/pool/main/r/ros-apt-source/ros2-apt-source_1.0.0~$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"
-        apt install /tmp/ros2-apt-source.deb
-    fi
+    export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
+    curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"
+    apt install /tmp/ros2-apt-source.deb
     # install development packages
     if [ "$target_distro" = "humble" ]; then
         echo "/// ---------- [${FUNCNAME[0]}]: install Ubuntu Jammy packages."
@@ -120,8 +116,11 @@ function rosdep_setup() {
     apt upgrade -y
     rosdep init
     rosdep update
+    # temporarily avoids rosidl_runtime_rs dependency.
+    # see more details at https://github.com/ros2/ros2/issues/1693
+    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 urdfdom_headers rosidl_runtime_rs"
     # ignore RTI Connext dependencies in default
-    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 urdfdom_headers"
+    #rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 urdfdom_headers"
     cd -
     rm -rf ${temp_dir}
 }
