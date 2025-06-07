@@ -80,7 +80,7 @@ function build_images() {
         else
             ubuntu="noble"
         fi
-        docker build --rm -f ./docker/Dockerfile --build-arg="ROS_DISTRO=$distro" --build-arg="UBUNTU=$ubuntu" --build-arg="SETUP_WS=/root/setup_ws" -t $DOCKERHUB_USERNAME/ros2dev:$distro .
+        docker build --pull --rm -f ./docker/Dockerfile --build-arg="ROS_DISTRO=$distro" --build-arg="UBUNTU=$ubuntu" --build-arg="SETUP_WS=/root/setup_ws" -t $DOCKERHUB_USERNAME/ros2dev:$distro .
     done
     echo "----- all images successfully generated!!! -----"
 }
