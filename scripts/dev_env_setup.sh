@@ -119,9 +119,9 @@ function rosdep_setup() {
     rosdep update
     # temporarily avoids rosidl_runtime_rs dependency.
     # see more details at https://github.com/ros2/ros2/issues/1693
-    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 urdfdom_headers rosidl_runtime_rs"
+    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 rti-connext-dds-7.7.0 urdfdom_headers rosidl_runtime_rs"
     # ignore RTI Connext dependencies in default
-    #rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 urdfdom_headers"
+    #rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 rti-connext-dds-7.7.0 urdfdom_headers"
     cd -
     rm -rf ${temp_dir}
 }
