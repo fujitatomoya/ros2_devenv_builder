@@ -15,6 +15,7 @@ ros_distros=(
     "humble"
     "jazzy"
     "kilted"
+    "lyrical"
     "rolling"
 )
 
@@ -75,11 +76,17 @@ function build_images() {
     echo "/// ---------- [${FUNCNAME[0]}]: building ros2dev docker container images."
     for distro in "${ros_distros[@]}"; do
         echo "----- $distro image building"
-        if [ "$distro" = "humble" ]; then
-            ubuntu="jammy"
-        else
-            ubuntu="noble"
-        fi
+        case "$distro" in
+            humble)
+                ubuntu="jammy"
+                ;;
+            jazzy|kilted)
+                ubuntu="noble"
+                ;;
+            lyrical|rolling)
+                ubuntu="resolute"
+                ;;
+        esac
         docker build --pull --rm -f ./docker/Dockerfile --build-arg="ROS_DISTRO=$distro" --build-arg="UBUNTU=$ubuntu" --build-arg="SETUP_WS=/root/setup_ws" -t $DOCKERHUB_USERNAME/ros2dev:$distro .
     done
     echo "----- all images successfully generated!!! -----"
