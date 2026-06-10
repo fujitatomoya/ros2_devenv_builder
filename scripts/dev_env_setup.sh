@@ -14,10 +14,25 @@ ros_distros=(
     "humble"
     "jazzy"
     "kilted"
+    "lyrical"
     "rolling"
 )
 
-# for Jazzy, Kilted and Rolling
+# for Lyrical and Rolling (Ubuntu 26.04 Resolute)
+resolute_development_packages=(
+    "python3-mypy"
+    "python3-pip"
+    "python3-pytest"
+    "python3-pytest-cov"
+    "python3-pytest-mock"
+    "python3-pytest-repeat"
+    "python3-pytest-rerunfailures"
+    "python3-pytest-runner"
+    "python3-pytest-timeout"
+    "ros-dev-tools"
+)
+
+# for Jazzy and Kilted (Ubuntu 24.04 Noble)
 noble_development_packages=(
     "python3-flake8-blind-except"
     "python3-flake8-class-newline"
@@ -97,13 +112,20 @@ function enable_repository() {
     apt install /tmp/ros2-apt-source.deb
     rm -f /tmp/ros-apt-source.deb
     # install development packages
-    if [ "$target_distro" = "humble" ]; then
-        echo "/// ---------- [${FUNCNAME[0]}]: install Ubuntu Jammy packages."
-        development_packages=("${jammy_development_packages[@]}")
-    else
-        echo "/// ---------- [${FUNCNAME[0]}]: install Ubuntu Noble packages."
-        development_packages=("${noble_development_packages[@]}")
-    fi
+    case "$target_distro" in
+        humble)
+            echo "/// ---------- [${FUNCNAME[0]}]: install Ubuntu Jammy packages."
+            development_packages=("${jammy_development_packages[@]}")
+            ;;
+        jazzy|kilted)
+            echo "/// ---------- [${FUNCNAME[0]}]: install Ubuntu Noble packages."
+            development_packages=("${noble_development_packages[@]}")
+            ;;
+        lyrical|rolling)
+            echo "/// ---------- [${FUNCNAME[0]}]: install Ubuntu Resolute packages."
+            development_packages=("${resolute_development_packages[@]}")
+            ;;
+    esac
     apt update && apt install -y "${development_packages[@]}"
 }
 
@@ -162,8 +184,11 @@ get_ubuntu_version
 if [ "$target_distro" = "humble" ] && [ "$UBUNTU_VERSION" != "22.04" ]; then
     echo "Error: ROS 2 Humble requires Ubuntu 22.04."
     exit 1
-elif [[ "$target_distro" = "jazzy" || "$target_distro" = "kilted" || "$target_distro" = "rolling" ]] && [ "$UBUNTU_VERSION" != "24.04" ]; then
-    echo "Error: ROS 2 Jazzy and Rolling require Ubuntu 24.04."
+elif [[ "$target_distro" = "jazzy" || "$target_distro" = "kilted" ]] && [ "$UBUNTU_VERSION" != "24.04" ]; then
+    echo "Error: ROS 2 Jazzy and Kilted require Ubuntu 24.04."
+    exit 1
+elif [[ "$target_distro" = "lyrical" || "$target_distro" = "rolling" ]] && [ "$UBUNTU_VERSION" != "26.04" ]; then
+    echo "Error: ROS 2 Lyrical and Rolling require Ubuntu 26.04."
     exit 1
 fi
 

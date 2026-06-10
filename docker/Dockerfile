@@ -1,6 +1,6 @@
 # Build:
 #  docker build --pull --rm -f ./docker/Dockerfile --build-arg="ROS_DISTRO=rolling" \
-#    --build-arg="SETUP_WS=/root/setup_ws" --build-arg="UBUNTU=noble" \
+#    --build-arg="SETUP_WS=/root/setup_ws" --build-arg="UBUNTU=resolute" \
 #    -t <user_name>/ros2dev:rolling .
 #
 # Usage:

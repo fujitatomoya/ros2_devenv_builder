@@ -15,6 +15,16 @@ The container images created by [ros2_devenv_builder](https://github.com/fujitat
 These development images are expected to have all dependent packages using `rosdep`.
 That means once [ros2 repo](https://github.com/ros2/ros2) is updated or added with new packages, `rosdep` is required to rebuild to install all the dependent packages, and then release the images.
 
+## Supported distributions
+
+| ROS 2 distribution | Ubuntu base image |
+| ------------------ | ----------------- |
+| `humble`           | Jammy (22.04)     |
+| `jazzy`            | Noble (24.04)     |
+| `kilted`           | Noble (24.04)     |
+| `lyrical`          | Resolute (26.04)  |
+| `rolling`          | Resolute (26.04)  |
+
 ## How to use
 
 The following options can be executed at the same time.
@@ -48,7 +58,7 @@ The following options can be executed at the same time.
   This option allows you to build/release the specified ROS distribution only.
 
 ```bash
-./scripts/image_builder.sh -t jazzy
+./scripts/image_builder.sh -t lyrical
 ```
 
 ## Reference
