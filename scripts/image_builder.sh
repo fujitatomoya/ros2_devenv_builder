@@ -9,6 +9,8 @@
 ################
 
 DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME:-tomoyafujita}"
+# If DOCKERHUB_TOKEN is set (e.g. CI), login is done non-interactively.
+DOCKERHUB_TOKEN="${DOCKERHUB_TOKEN:-}"
 COLCON_WS="${COLCON_WS:-/root/colcon_ws}"
 
 ros_distros=(
@@ -57,7 +59,11 @@ function check_dockerhub_setting () {
         exit 1
     fi
     # check if docker login succeeds
-    docker login
+    if [ -n "$DOCKERHUB_TOKEN" ]; then
+        echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    else
+        docker login
+    fi
 }
 
 function command_exist() {
@@ -95,9 +101,15 @@ function build_images() {
 function verify_images() {
     trap exit_trap ERR
     echo "[${FUNCNAME[0]}]: verifying ros2dev docker container images."
+    # allocate pseudo-TTY only when running interactively, CI does not have one.
+    tty_opts=()
+    if [ -t 0 ]; then
+        tty_opts=(-it)
+    fi
     for distro in "${ros_distros[@]}"; do
         echo "----- $distro image verifying"
-        docker run -it --rm $DOCKERHUB_USERNAME/ros2dev:$distro \
+        # MAKEFLAGS is passed through (if set on host) to control build parallelism, e.g. memory-limited CI runners.
+        docker run "${tty_opts[@]}" --rm -e MAKEFLAGS $DOCKERHUB_USERNAME/ros2dev:$distro \
             bash -c "source /root/.bashrc && mkdir -p /root/colcon_ws/src && cd /root/colcon_ws && vcs import --input https://raw.githubusercontent.com/ros2/ros2/$distro/ros2.repos src && colcon build --symlink-install && cd /root && rm -rf /root/colcon_ws"
     done
     echo "----- all images successfully verified!!! -----"
@@ -111,7 +123,7 @@ function upload_images() {
         # TODO@fujitatomoya: support multi-arch docker images
         docker push $DOCKERHUB_USERNAME/ros2dev:$distro
     done
-    echo "----- all images successfully verified!!! -----"
+    echo "----- all images successfully uploaded!!! -----"
 }
 
 ########

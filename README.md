@@ -1,5 +1,7 @@
 # ros2_devenv_builder
 
+[![nightly](https://github.com/fujitatomoya/ros2_devenv_builder/actions/workflows/nightly.yml/badge.svg)](https://github.com/fujitatomoya/ros2_devenv_builder/actions/workflows/nightly.yml)
+
 [ros2_devenv_builder](https://github.com/fujitatomoya/ros2_devenv_builder) creates ROS 2 builder container images for full source build, verifies and pushes them to [DockerHub](https://hub.docker.com/).
 
 ## Motivation
@@ -59,6 +61,31 @@ The following options can be executed at the same time.
 
 ```bash
 ./scripts/image_builder.sh -t lyrical
+```
+
+## Nightly build and release
+
+[nightly.yml](.github/workflows/nightly.yml) GitHub Actions workflow builds, verifies and releases all distribution images to [DockerHub](https://hub.docker.com/) every day (00:00 JST).
+Each distribution runs as an independent job, so the images are always up to date, and if something breaks (e.g. new `rosdep` key, package change) it is visible as a failed job.
+Images are pushed only after the verification succeeds, so [DockerHub](https://hub.docker.com/) always keeps the last known good image.
+
+- Required repository secrets
+
+  | Secret               | Description                                                                          |
+  | -------------------- | ------------------------------------------------------------------------------------ |
+  | `DOCKERHUB_USERNAME` | DockerHub account name, also used as image namespace (`<user>/ros2dev:<distro>`)     |
+  | `DOCKERHUB_TOKEN`    | DockerHub [access token](https://docs.docker.com/security/for-developers/access-tokens/) with Read & Write permission |
+
+- Manual trigger
+
+  The workflow can also be triggered manually from the Actions tab (`Run workflow`), with a specific target distribution and with or without pushing to [DockerHub](https://hub.docker.com/).
+
+- Local non-interactive use
+
+  `image_builder.sh` logs in to [DockerHub](https://hub.docker.com/) non-interactively when `DOCKERHUB_TOKEN` is set, otherwise it prompts via `docker login`.
+
+```bash
+DOCKERHUB_USERNAME=<user> DOCKERHUB_TOKEN=<token> ./scripts/image_builder.sh -b -v -u -t rolling
 ```
 
 ## Reference

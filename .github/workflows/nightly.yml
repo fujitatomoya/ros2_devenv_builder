@@ -1,0 +1,98 @@
+name: nightly
+
+# Nightly build / verify / release of ros2dev images to DockerHub.
+#
+# - schedule: builds, verifies (full source colcon build) and pushes all distributions.
+# - workflow_dispatch: same as above, optionally for a single distribution and/or without push.
+#
+# Each distribution runs in its own job, so one broken distribution does not block the others,
+# and the failed distribution is directly visible in the Actions summary.
+# Images are pushed only when the verification succeeds, so DockerHub always keeps the last known good image.
+#
+# Required repository secrets:
+# - DOCKERHUB_USERNAME : DockerHub account name (also used as image namespace, e.g. <user>/ros2dev:rolling)
+# - DOCKERHUB_TOKEN    : DockerHub access token with Read & Write permission
+
+on:
+  schedule:
+    # 15:00 UTC == 00:00 JST, every day
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+    inputs:
+      target_distro:
+        description: 'ROS 2 distribution to build'
+        type: choice
+        default: all
+        options:
+          - all
+          - humble
+          - jazzy
+          - kilted
+          - lyrical
+          - rolling
+      push:
+        description: 'push verified images to DockerHub'
+        type: boolean
+        default: true
+
+# do not run two nightly builds at the same time, but do not cancel the running one either.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  matrix:
+    name: resolve target distributions
+    runs-on: ubuntu-latest
+    outputs:
+      distros: ${{ steps.resolve.outputs.distros }}
+    env:
+      TARGET_DISTRO: ${{ inputs.target_distro }}
+    steps:
+      - id: resolve
+        run: |
+          # keep in sync with ros_distros in scripts/image_builder.sh
+          if [ -n "$TARGET_DISTRO" ] && [ "$TARGET_DISTRO" != "all" ]; then
+            echo "distros=[\"$TARGET_DISTRO\"]" >> "$GITHUB_OUTPUT"
+          else
+            echo 'distros=["humble","jazzy","kilted","lyrical","rolling"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: ${{ matrix.ros_distro }}
+    needs: matrix
+    runs-on: ubuntu-latest
+    # GitHub-hosted runner hard limit is 6 hours, full source build takes a few hours.
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        ros_distro: ${{ fromJSON(needs.matrix.outputs.distros) }}
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      # GitHub-hosted runner has 4 vCPU / 16GB RAM, limit make parallelism to avoid OOM during colcon build.
+      MAKEFLAGS: -j2
+    steps:
+      - name: checkout
+        uses: actions/checkout@v5
+
+      - name: free disk space
+        # GitHub-hosted runner has limited free disk, remove unused pre-installed tools
+        # to make room for the image and the full source build.
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/share/swift /usr/local/share/boost
+          sudo docker image prune --all --force
+          df -h /
+
+      - name: build ${{ matrix.ros_distro }}
+        run: ./scripts/image_builder.sh -b -t ${{ matrix.ros_distro }}
+
+      - name: verify ${{ matrix.ros_distro }}
+        run: ./scripts/image_builder.sh -v -t ${{ matrix.ros_distro }}
+
+      - name: push ${{ matrix.ros_distro }}
+        if: github.event_name == 'schedule' || inputs.push == true
+        run: ./scripts/image_builder.sh -u -t ${{ matrix.ros_distro }}
