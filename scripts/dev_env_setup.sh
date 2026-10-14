@@ -139,11 +139,18 @@ function rosdep_setup() {
     apt upgrade -y
     rosdep init
     rosdep update
+    # ignore RTI Connext dependencies in default.
     # temporarily avoids rosidl_runtime_rs dependency.
     # see more details at https://github.com/ros2/ros2/issues/1693
-    rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 rti-connext-dds-7.7.0 urdfdom_headers rosidl_runtime_rs"
-    # ignore RTI Connext dependencies in default
-    #rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 rti-connext-dds-7.7.0 urdfdom_headers"
+    rosdep_skip_keys="fastcdr rti-connext-dds-6.0.1 rti-connext-dds-7.3.0 rti-connext-dds-7.7.0 urdfdom_headers rosidl_runtime_rs"
+    if [ "$target_distro" = "rolling" ]; then
+        # Rolling binary packages (ros-rolling-*) are not published for Ubuntu Resolute yet,
+        # so any ROS package that is not part of ros2.repos cannot be resolved by rosdep via apt.
+        # xacro is only an exec_depend of robot_state_publisher (not required for colcon build),
+        # see https://github.com/ros/robot_state_publisher/pull/255
+        rosdep_skip_keys="${rosdep_skip_keys} xacro"
+    fi
+    rosdep install --from-paths src --ignore-src -y --skip-keys "${rosdep_skip_keys}"
     cd -
     rm -rf ${temp_dir}
 }
